@@ -1,0 +1,45 @@
+export type Role = "OWNER" | "WAREHOUSE" | "SALES" | "BUYER";
+
+export const ROLE_LABEL: Record<Role, string> = {
+  OWNER: "Owner", WAREHOUSE: "Warehouse staff", SALES: "Sales team", BUYER: "Buyer (shop owner)",
+};
+
+/** The 17 steps of the business, in order. Shown on the guide page and referenced by each screen. */
+export const STEPS: { n: string; title: string; who: Role[]; where: string; href: string; why: string }[] = [
+  { n: "1", title: "Container arrives", who: ["OWNER"], where: "Containers › Receive container", href: "/containers",
+    why: "Record what you bought: supplier, landed cost, and the packing list (expected pieces and weight)." },
+  { n: "2", title: "Dock check", who: ["WAREHOUSE"], where: "Containers › open the ARRIVED container", href: "/containers",
+    why: "Count bales and weigh the container at the gate. A big gap vs the packing list means a supplier claim." },
+  { n: "3", title: "Sort into cartons + print labels", who: ["WAREHOUSE"], where: "Sorting station", href: "/containers",
+    why: "Similar items go into one carton (brand, gender, category, grade, MRP band). Each carton gets a barcode label (LPN)." },
+  { n: "4", title: "Finish sorting", who: ["WAREHOUSE"], where: "Sorting station › Finish sorting", href: "/containers",
+    why: "Locks the container and shows pieces sorted vs the packing list." },
+  { n: "5", title: "Putaway to shelves", who: ["WAREHOUSE"], where: "Putaway", href: "/putaway",
+    why: "Scan the carton, then the bin. Only shelved cartons can be sold, so stock is always findable." },
+  { n: "6", title: "Build a lot", who: ["SALES"], where: "Lots › Build lot", href: "/lots",
+    why: "Pick cartons to sell together. The manifest (pieces, brand mix, sizes, MRP) is calculated, never typed." },
+  { n: "7", title: "Add photos and list for sale", who: ["SALES"], where: "Lots › open lot", href: "/lots",
+    why: "Photos build trust. Price as % of MRP; optionally accept offers above a floor." },
+  { n: "8", title: "Approve buyers", who: ["SALES"], where: "Buyers", href: "/buyers",
+    why: "Buyers register with GSTIN. Only approved buyers see the catalogue (brands often require a closed catalogue)." },
+  { n: "9a", title: "Buyer: Buy Now", who: ["BUYER"], where: "Buyer site › lot › Buy now", href: "http://localhost:3000",
+    why: "The lot is held for 15 minutes while the buyer pays. Checkout shows GST." },
+  { n: "9b", title: "Buyer: Make an offer → seller accepts or counters", who: ["BUYER", "SALES"], where: "Buyer site › lot; Offers", href: "/offers",
+    why: "For bigger buyers who negotiate. Accepting holds the lot for 24 hours for payment." },
+  { n: "10", title: "Buyer pays", who: ["BUYER"], where: "Buyer site › Pay", href: "http://localhost:3000",
+    why: "Simulated UPI / NetBanking. A failed payment can be retried until the hold runs out; then the lot goes back on sale." },
+  { n: "11", title: "Pick: scan each carton", who: ["WAREHOUSE"], where: "Pick, pack & dispatch", href: "/fulfil",
+    why: "The pick list shows the bin of every carton. Scanning a wrong carton is rejected." },
+  { n: "12", title: "Pack: weigh the consignment", who: ["WAREHOUSE"], where: "Pick, pack & dispatch", href: "/fulfil",
+    why: "Weight is checked against the sorting weights (±5%) to catch missing pieces before they leave." },
+  { n: "13", title: "Dispatch with GST invoice + e-way bill", who: ["WAREHOUSE"], where: "Pick, pack & dispatch", href: "/fulfil",
+    why: "Enter transporter and vehicle. The tax invoice, IRN and e-way bill are generated; cartons leave stock." },
+  { n: "14", title: "Buyer confirms delivery", who: ["BUYER"], where: "Buyer site › My orders", href: "http://localhost:3000",
+    why: "Starts the 72-hour claim window. The buyer can print the invoice." },
+  { n: "15", title: "Buyer: no issues, or raise a claim", who: ["BUYER"], where: "Buyer site › order", href: "http://localhost:3000",
+    why: "Short pieces, wrong grade or damage, within 72 hours. Otherwise the order closes itself." },
+  { n: "16", title: "Settle claim", who: ["OWNER"], where: "Claims", href: "/claims",
+    why: "Give a credit amount or reject with a reason. The order closes." },
+  { n: "17", title: "Watch the business", who: ["OWNER"], where: "Dashboard", href: "/",
+    why: "Recovery % per container (sales ÷ landed cost), stock aging, order pipeline, claims rate." },
+];
