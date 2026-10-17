@@ -44,6 +44,15 @@ body {
   .data-table .num {
     @apply text-right tabular-nums;
   }
+  /* Number inputs without the browser's up/down arrows. */
+  .no-spin {
+    appearance: textfield;
+  }
+  .no-spin::-webkit-outer-spin-button,
+  .no-spin::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
   .muted {
     @apply text-xs text-slate-500;
   }

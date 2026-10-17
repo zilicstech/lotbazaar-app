@@ -146,12 +146,13 @@ function ContainerPageContent() {
         </p>
       )}
       {container?.status === "SORTING" && masters && (
-        <form onSubmit={addCarton} className="card mb-6 space-y-4">
-          <div>
-            <h2 className="font-semibold">Sorting station — add carton</h2>
-            <p className="text-xs text-slate-500">One carton = one bucket (brand · gender · category · grade). Enter each size with its tag MRP and number of pieces; add another row for the same size at a different price. Totals, the SKU and the LPN label are generated.</p>
+        <form onSubmit={addCarton} className="card mb-6 !p-0">
+          <div className="border-b border-slate-200 px-6 py-4">
+            <h2 className="text-base font-semibold text-slate-900">Sorting station: add a carton</h2>
+            <p className="mt-0.5 text-sm text-slate-500">One carton holds one brand, gender, category and grade. List each size with its tag MRP; use another row for the same size at a different price.</p>
           </div>
-          <div className="grid gap-3 md:grid-cols-4">
+          <div className="space-y-6 px-6 py-5">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div><label className="label" htmlFor="brand">Brand</label>
               <select id="brand" className="input" value={form.brandId} onChange={(e) => setForm({ ...form, brandId: e.target.value })}>
                 {masters.brands.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}</select></div>
@@ -165,50 +166,80 @@ function ContainerPageContent() {
               <select id="grade" className="input" value={form.grade} onChange={(e) => setForm({ ...form, grade: e.target.value })}>
                 <option value="A">A – new with tags</option><option value="B">B – no tags / minor defect</option><option value="C">C – defect</option></select></div>
           </div>
-          <div>
-            <div className="label">Sizes and tag prices</div>
-            <div className="overflow-x-auto rounded-lg border border-slate-200">
-              <table className="data-table">
-                <thead><tr><th>Size</th><th className="num">MRP per piece (₹)</th><th className="num">Pieces</th><th className="num">Line total</th><th className="w-10" /></tr></thead>
-                <tbody>
+
+            <div>
+              <div className="mb-2 flex items-baseline justify-between">
+                <span className="text-sm font-medium text-slate-900">Sizes and tag prices</span>
+                <span className="text-xs text-slate-500">{lines.length} {lines.length === 1 ? "row" : "rows"}</span>
+              </div>
+              <div className="rounded-xl border border-slate-200">
+                <div className="hidden grid-cols-[7rem_10rem_1.5rem_7rem_1.5rem_9rem_1fr] items-center gap-x-3 border-b border-slate-200 bg-slate-50 px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500 sm:grid rounded-t-xl">
+                  <span>Size</span><span>MRP per piece</span><span /><span>Pieces</span><span /><span>Line total</span><span />
+                </div>
+                <ul className="divide-y divide-slate-100">
                   {lines.map((l, i) => {
                     const ok = Number(l.mrp) > 0 && Number(l.pieces) > 0;
                     return (
-                      <tr key={l.key}>
-                        <td className="!py-2">
-                          <select aria-label={`Size, row ${i + 1}`} className="input w-28" value={l.size || sizes[0]} onChange={(e) => setLine(i, { size: e.target.value })}>
-                            {sizes.map((s) => <option key={s} value={s}>{s}</option>)}
-                          </select>
-                        </td>
-                        <td className="num !py-2"><input aria-label={`MRP per piece, row ${i + 1}`} type="number" min="1" step="0.01" inputMode="decimal" className="input ml-auto w-36 text-right" placeholder="e.g. 1999" value={l.mrp} onChange={(e) => setLine(i, { mrp: e.target.value })} /></td>
-                        <td className="num !py-2"><input aria-label={`Pieces, row ${i + 1}`} type="number" min="1" step="1" inputMode="numeric" className="input ml-auto w-28 text-right" placeholder="0" value={l.pieces} onChange={(e) => setLine(i, { pieces: e.target.value })} /></td>
-                        <td className="num !py-2 align-middle font-medium">{ok ? inr(Number(l.mrp) * Number(l.pieces)) : <span className="text-slate-300">—</span>}</td>
-                        <td className="!py-2 text-right align-middle">
-                          {lines.length > 1 && <button type="button" aria-label={`Remove row ${i + 1}`} onClick={() => setLines((ls) => ls.filter((_, j) => j !== i))} className="rounded p-1 text-slate-400 hover:bg-rose-50 hover:text-rose-600">✕</button>}
-                        </td>
-                      </tr>
+                      <li key={l.key} className="grid grid-cols-2 items-center gap-x-3 gap-y-2 px-4 py-3 sm:grid-cols-[7rem_10rem_1.5rem_7rem_1.5rem_9rem_1fr]">
+                        <select aria-label={`Size, row ${i + 1}`} className="input" value={l.size || sizes[0]} onChange={(e) => setLine(i, { size: e.target.value })}>
+                          {sizes.map((s) => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                        <div className="relative">
+                          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">₹</span>
+                          <input aria-label={`MRP per piece, row ${i + 1}`} type="number" min="1" step="0.01" inputMode="decimal" className="input no-spin pl-7 tabular-nums"
+                            placeholder="1,999" value={l.mrp} onChange={(e) => setLine(i, { mrp: e.target.value })} />
+                        </div>
+                        <span aria-hidden className="hidden text-center text-slate-400 sm:block">×</span>
+                        <div className="relative">
+                          <input aria-label={`Pieces, row ${i + 1}`} type="number" min="1" step="1" inputMode="numeric" className="input no-spin pr-10 tabular-nums"
+                            placeholder="0" value={l.pieces} onChange={(e) => setLine(i, { pieces: e.target.value })} />
+                          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">pcs</span>
+                        </div>
+                        <span aria-hidden className="hidden text-center text-slate-400 sm:block">=</span>
+                        <div className="text-sm font-semibold tabular-nums text-slate-900">{ok ? inr(Number(l.mrp) * Number(l.pieces)) : <span className="font-normal text-slate-300">₹0</span>}</div>
+                        <div className="text-right">
+                          <button type="button" aria-label={`Remove row ${i + 1}`} disabled={lines.length === 1} title={lines.length === 1 ? "At least one row is needed" : "Remove row"}
+                            onClick={() => setLines((ls) => ls.filter((_, j) => j !== i))}
+                            className="rounded-md p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 disabled:invisible">
+                            <svg aria-hidden viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4"><path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" /></svg>
+                          </button>
+                        </div>
+                      </li>
                     );
                   })}
-                </tbody>
-              </table>
-              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-slate-50/60 px-4 py-2.5 text-sm">
-                <button type="button" className="font-medium text-emerald-700 hover:underline"
-                  onClick={() => setLines((ls) => [...ls, { ...newLine(), size: ls[ls.length - 1]?.size || sizes[0] }])}>+ Add row</button>
-                <div className="text-slate-700">
-                  <b className="tabular-nums">{num(pieces)}</b> pieces · <b className="tabular-nums">{inr(totalMrp)}</b> total MRP
-                  {pieces > 0 && <span className="text-slate-500"> · avg {inr(totalMrp / pieces)} / pc</span>}
+                </ul>
+                <div className="border-t border-slate-100 px-4 py-3">
+                  <Button type="button" variant="secondary" size="sm"
+                    onClick={() => setLines((ls) => [...ls, { ...newLine(), size: ls[ls.length - 1]?.size || sizes[0] }])}>
+                    <svg aria-hidden viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4"><path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" /></svg>
+                    Add row
+                  </Button>
                 </div>
               </div>
+              {incomplete && <p className="mt-2 text-xs text-amber-700">Each row needs both an MRP and a number of pieces.</p>}
             </div>
-            {incomplete && <p className="mt-1 text-xs text-amber-700">Rows need both an MRP and a number of pieces; empty rows are skipped.</p>}
           </div>
-          <div className="grid gap-3 md:grid-cols-4">
-            <div><label className="label" htmlFor="weight">Carton weight (kg)</label>
-              <input id="weight" required type="number" step="0.1" min="0.1" className="input" value={form.weightKg} onChange={(e) => setForm({ ...form, weightKg: e.target.value })} /></div>
-            <div className="flex items-end"><Button type="submit" disabled={pieces === 0 || incomplete}>Add carton</Button></div>
+
+          <div className="flex flex-wrap items-end justify-between gap-6 rounded-b-xl border-t border-slate-200 bg-slate-50/70 px-6 py-4">
+            <div className="flex flex-wrap items-end gap-6">
+              <div className="w-44">
+                <label className="label" htmlFor="weight">Carton weight</label>
+                <div className="relative">
+                  <input id="weight" required type="number" step="0.1" min="0.1" inputMode="decimal" className="input no-spin pr-9 tabular-nums" placeholder="0.0"
+                    value={form.weightKg} onChange={(e) => setForm({ ...form, weightKg: e.target.value })} />
+                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">kg</span>
+                </div>
+              </div>
+              <dl className="flex gap-6 pb-1.5 text-sm">
+                <div><dt className="text-xs text-slate-500">Pieces</dt><dd className="font-semibold tabular-nums text-slate-900">{num(pieces)}</dd></div>
+                <div><dt className="text-xs text-slate-500">Total MRP</dt><dd className="font-semibold tabular-nums text-slate-900">{inr(totalMrp)}</dd></div>
+                <div><dt className="text-xs text-slate-500">Avg / piece</dt><dd className="font-semibold tabular-nums text-slate-900">{pieces > 0 ? inr(totalMrp / pieces) : "—"}</dd></div>
+              </dl>
+            </div>
+            <Button type="submit" disabled={pieces === 0 || incomplete}>Add carton</Button>
           </div>
           {last && (
-            <div className="flex flex-wrap items-center gap-3 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+            <div className="mx-6 mb-5 mt-1 flex flex-wrap items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-800">
               <span>Carton <span className="font-mono font-semibold">{last.lpn}</span> created → stock type <span className="font-mono">{last.skuCode}</span> ({last.pieceCount} pcs)</span>
               <Link href={`/labels/${id}?lpn=${last.lpn}`} target="_blank" className="font-medium text-emerald-700 hover:underline">Print its label</Link>
               <Link href="/putaway" className="text-emerald-700 hover:underline">Shelve it (putaway)</Link>
