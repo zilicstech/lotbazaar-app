@@ -9,7 +9,7 @@ export type Container = {
 export type Carton = {
   id: string; lpn: string; containerRef: string; skuCode: string; brand: string; category: string; gender: string;
   grade: string; mrpBand: string; pieceCount: number; weightG: number; totalMrp: number; sizeTally: string;
-  status: string; lotId: string | null; warehouse: string; bin: string | null;
+  status: string; lotId: string | null; warehouse: string; bin: string | null; createdAt: string;
 };
 export type Manifest = {
   cartons: number; pieces: number; totalMrp: number; avgMrp: number; weightKg: number; grades: string[];
@@ -32,10 +32,6 @@ export type Order = {
 };
 export type Buyer = {
   id: string; name: string; email: string; businessName: string; gstin: string; city: string; status: string; createdAt: string;
-};
-export type StockLine = {
-  skuCode: string; brand: string; category: string; gender: string; grade: string; mrpBand: string;
-  availableCartons: number; availablePieces: number; availableMrp: number; reservedCartons: number; soldCartons: number;
 };
 export type Offer = {
   id: string; lotId: string; lotCode: string; lotTitle: string; lotTotalMrp: number; lotPriceAmount: number;

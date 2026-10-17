@@ -89,8 +89,8 @@ function FulfilContent() {
       )}
 
       <div className="card mb-4 overflow-x-auto p-0">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
+        <table className="data-table">
+          <thead>
             <tr><th className="px-4 py-2">Bin</th><th>Carton</th><th>Stock type</th><th className="text-right">Pieces</th><th className="text-right">Weight</th><th className="px-4">Picked</th></tr>
           </thead>
           <tbody>
@@ -98,7 +98,7 @@ function FulfilContent() {
               <tr key={l.lpn} className={`border-t border-slate-100 ${l.picked ? "bg-emerald-50" : ""}`}>
                 <td className="px-4 py-2 font-mono font-semibold">{l.bin}</td>
                 <td className="font-mono text-xs">{l.lpn}
-                  {!l.picked && (s === "PAID" || s === "PICKING") && <button type="button" className="ml-2 text-[11px] text-slate-500 underline" onClick={() => { setLpn(l.lpn); scanInput.current?.focus(); }}>fill</button>}
+                  {!l.picked && (s === "PAID" || s === "PICKING") && <button type="button" className="ml-2 text-[11px] text-slate-500 text-emerald-700 hover:underline" onClick={() => { setLpn(l.lpn); scanInput.current?.focus(); }}>fill</button>}
                 </td>
                 <td className="font-mono text-xs">{l.skuCode}</td>
                 <td className="text-right tabular-nums">{l.pieceCount}</td><td className="text-right tabular-nums">{l.weightKg} kg</td>
@@ -144,7 +144,7 @@ function FulfilContent() {
       {s === "DISPATCHED" && order.invoiceNo && (
         <div className="card text-sm">
           Dispatched via <b>{order.transporter}</b> ({order.vehicleNo}). Tax invoice <b>{order.invoiceNo}</b>.{" "}
-          <Link className="font-medium underline" href={`/invoice/${order.id}`} target="_blank">Open / print invoice</Link>
+          <Link className="font-medium text-emerald-700 hover:underline" href={`/invoice/${order.id}`} target="_blank">Open / print invoice</Link>
         </div>
       )}
     </Shell>

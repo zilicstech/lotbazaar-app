@@ -97,6 +97,8 @@ docker run -p 3000:3000 lotbazaar-buyer-web
 
 ## Notes
 
+- Every list page uses `components/list.tsx`: search, filter dropdowns with removable chips, status tabs with counts, sortable columns, paging and CSV export. Filters live in the URL (`?q=…&f.warehouse=…&tab=…`), so a filtered view can be bookmarked or shared. The pure filter and sort logic is in `lib/listQuery.ts` and tested with `npm test`.
+
 - Sessions are kept in `localStorage`; a 401 from the API signs the user out.
 - `components/ui.tsx`, `components/InvoiceView.tsx` and `lib/types.ts` are duplicated between the two apps. Move them to a shared workspace package when they start to diverge.
 - There is no frontend test suite yet; the end-to-end behaviour is covered by the backend's integration tests.

@@ -23,7 +23,7 @@ type Dashboard = {
 const PIPELINE = ["PAYMENT_PENDING", "PAID", "PICKING", "PACKED", "DISPATCHED", "DELIVERED", "CLOSED"];
 
 function Bar({ pct, tone = "bg-slate-700" }: { pct: number; tone?: string }) {
-  return <div className="h-2 w-full rounded bg-slate-100"><div className={`h-2 rounded ${tone}`} style={{ width: `${Math.min(100, Math.max(0, pct))}%` }} /></div>;
+  return <div className="h-2 w-full rounded-full bg-slate-100"><div className={`h-2 rounded-full ${tone}`} style={{ width: `${Math.min(100, Math.max(0, pct))}%` }} /></div>;
 }
 
 export default function DashboardPage() {
@@ -39,7 +39,7 @@ export default function DashboardPage() {
   const maxAging = Math.max(1, ...(d?.aging.map((a) => a.pieces) ?? [1]));
   const maxFunnel = Math.max(1, ...(d?.funnel.map((f) => f.orders) ?? [1]));
   return (
-    <Shell title="Dashboard" help="Step 17. How the business is doing: money recovered per container, what stock is ageing, where orders are stuck.">
+    <Shell title="Dashboard" help="How the business is doing: money recovered per container, what stock is ageing, where orders are stuck.">
       <ErrorBox message={error} />
       {d && h && (
         <div className="space-y-6">
@@ -58,12 +58,12 @@ export default function DashboardPage() {
               { href: "/fulfil", label: "Orders to pack/ship", v: h.ordersToFulfil },
               { href: "/claims", label: "Open claims", v: h.openClaims },
             ].map((t) => (
-              <Link key={t.href} href={t.href} className={`card hover:border-slate-400 ${t.v > 0 ? "border-amber-300" : ""}`}>
+              <Link key={t.href} href={t.href} className={`card !p-4 transition hover:-translate-y-0.5 hover:shadow-md ${t.v > 0 ? "!border-amber-300 bg-amber-50/40" : ""}`}>
                 <div className="text-xs font-medium text-slate-500">{t.label}</div>
-                <div className="mt-1 text-2xl font-semibold">{t.v}</div>
+                <div className={`mt-1 text-2xl font-semibold tabular-nums ${t.v > 0 ? "text-amber-700" : "text-slate-900"}`}>{t.v}</div>
               </Link>
             ))}
-            <div className="card">
+            <div className="card !p-4">
               <div className="text-xs font-medium text-slate-500">Stock ledger</div>
               <div className={`mt-1 text-lg font-semibold ${h.ledgerDrift === 0 ? "text-emerald-700" : "text-rose-700"}`}>
                 {h.ledgerDrift === 0 ? "Matches ✓" : `Off by ${h.ledgerDrift} pcs`}
@@ -71,25 +71,25 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <section className="card overflow-x-auto p-0">
-            <div className="px-4 pt-4">
-              <h2 className="font-semibold">Recovery per container</h2>
-              <p className="text-xs text-slate-500">Sales from each container (split by its cartons&apos; share of every sold lot) against what the container cost. 100% = paid back.</p>
+          <section className="card overflow-x-auto !p-0">
+            <div className="px-5 pt-5">
+              <h2 className="section-title !mb-1">Recovery per container</h2>
+              <p className="muted">Sales from each container (split by its cartons&apos; share of every sold lot) against what the container cost. 100% = paid back.</p>
             </div>
-            <table className="mt-3 w-full text-sm">
-              <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
-                <tr><th className="px-4 py-2">Container</th><th>Status</th><th className="text-right">Landed cost</th><th className="text-right">Sales so far</th>
-                  <th className="w-48 px-4">Recovered</th><th className="w-48 px-4">MRP sold</th></tr>
+            <table className="data-table mt-4">
+              <thead>
+                <tr><th>Container</th><th>Status</th><th className="num">Landed cost</th><th className="num">Sales so far</th>
+                  <th className="w-48">Recovered</th><th className="w-48">MRP sold</th></tr>
               </thead>
               <tbody>
                 {d.recovery.map((r) => (
-                  <tr key={r.ref} className="border-t border-slate-100">
-                    <td className="px-4 py-2"><div className="font-medium">{r.ref}</div><div className="text-xs text-slate-500">{r.supplier}</div></td>
+                  <tr key={r.ref}>
+                    <td><div className="font-mono text-sm font-medium">{r.ref}</div><div className="muted">{r.supplier}</div></td>
                     <td><Badge value={r.status} /></td>
-                    <td className="text-right tabular-nums">{inr(r.landedCost)}</td>
-                    <td className="text-right tabular-nums">{inr(r.revenue)}</td>
-                    <td className="px-4"><div className="text-xs tabular-nums">{r.recoveryPct ?? 0}%</div><Bar pct={r.recoveryPct ?? 0} tone="bg-emerald-600" /></td>
-                    <td className="px-4"><div className="text-xs tabular-nums">{r.sellThroughPct ?? 0}%</div><Bar pct={r.sellThroughPct ?? 0} /></td>
+                    <td className="num">{inr(r.landedCost)}</td>
+                    <td className="num">{inr(r.revenue)}</td>
+                    <td><div className="text-xs tabular-nums">{r.recoveryPct ?? 0}%</div><Bar pct={r.recoveryPct ?? 0} tone="bg-emerald-600" /></td>
+                    <td><div className="text-xs tabular-nums">{r.sellThroughPct ?? 0}%</div><Bar pct={r.sellThroughPct ?? 0} tone="bg-slate-500" /></td>
                   </tr>
                 ))}
               </tbody>
@@ -98,8 +98,8 @@ export default function DashboardPage() {
 
           <div className="grid gap-4 lg:grid-cols-2">
             <section className="card">
-              <h2 className="font-semibold">Stock age</h2>
-              <p className="mb-3 text-xs text-slate-500">Unsold pieces by days since sorting. Old stock should be marked down or bundled.</p>
+              <h2 className="section-title !mb-1">Stock age</h2>
+              <p className="muted mb-4">Unsold pieces by days since sorting. Old stock should be marked down or bundled.</p>
               <div className="space-y-2">
                 {d.aging.map((a) => (
                   <div key={a.bucket} className="grid grid-cols-[90px_1fr_150px] items-center gap-2 text-sm">
@@ -111,14 +111,14 @@ export default function DashboardPage() {
               </div>
             </section>
             <section className="card">
-              <h2 className="font-semibold">Order pipeline</h2>
-              <p className="mb-3 text-xs text-slate-500">Where every order is right now (value incl. GST).</p>
+              <h2 className="section-title !mb-1">Order pipeline</h2>
+              <p className="muted mb-4">Where every order is right now (value incl. GST).</p>
               <div className="space-y-2">
                 {PIPELINE.map((s) => {
                   const f = d.funnel.find((x) => x.status === s);
                   return (
                     <div key={s} className="grid grid-cols-[150px_1fr_130px] items-center gap-2 text-sm">
-                      <Badge value={s} /><Bar pct={(100 * (f?.orders ?? 0)) / maxFunnel} tone="bg-indigo-500" />
+                      <Badge value={s} /><Bar pct={(100 * (f?.orders ?? 0)) / maxFunnel} tone="bg-emerald-500" />
                       <div className="text-right text-xs tabular-nums">{f?.orders ?? 0} · {inr(f?.value ?? 0)}</div>
                     </div>
                   );

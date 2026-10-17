@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import Shell from "@/components/Shell";
 import { Badge, Button, ErrorBox } from "@/components/ui";
+import { EmptyRow, ListTabs, ListToolbar, Pagination, SortTh, useList } from "@/components/list";
 import { api, getSession, inr, num } from "@/lib/api";
 import type { Container, Masters } from "@/lib/types";
 
@@ -37,9 +38,26 @@ export default function ContainersPage() {
     }
   }
 
+  const list = useList(rows, {
+    search: (c) => [c.ref, c.supplier, c.warehouse],
+    filters: {
+      warehouse: { label: "Warehouse", value: (c) => c.warehouse },
+      supplier: { label: "Supplier", value: (c) => c.supplier },
+    },
+    tabs: [
+      { key: "all", label: "All", match: () => true },
+      { key: "dock", label: "At the dock", match: (c) => c.status === "ARRIVED" },
+      { key: "sorting", label: "Sorting", match: (c) => c.status === "SORTING" },
+      { key: "shelve", label: "To shelve", match: (c) => c.status === "SORTED" && c.unshelvedCartons > 0 },
+      { key: "done", label: "Done", match: (c) => c.status === "SORTED" && c.unshelvedCartons === 0 },
+    ],
+    sorts: { ref: (c) => c.ref, received: (c) => c.receivedAt, pieces: (c) => c.pieces, mrp: (c) => c.totalMrp, cost: (c) => c.landedCost },
+    defaultSort: { key: "received", dir: "desc" },
+  });
+
   return (
     <Shell title="Containers & sorting"
-      help={<>Steps 1–4. A container is one purchase from a supplier. It moves <b>ARRIVED</b> (at the gate) → <b>SORTING</b> (dock check done, cartons being made) → <b>SORTED</b>. Open a container to work on it.</>}
+      help={<>A container is one purchase from a supplier. It moves from <b>arrived</b> (at the gate) to <b>sorting</b> (dock check done, cartons being made) to <b>sorted</b>. Open one to work on it.</>}
       actions={isOwner && <Button onClick={() => setOpen(!open)}>{open ? "Cancel" : "Receive container"}</Button>}>
       <ErrorBox message={error} />
       {open && masters && (
@@ -62,32 +80,37 @@ export default function ContainersPage() {
           <div className="md:col-span-5"><Button type="submit">Record arrival</Button></div>
         </form>
       )}
-      <div className="card overflow-x-auto p-0">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
-            <tr><th className="px-4 py-3">Container</th><th>Supplier</th><th>Warehouse</th><th>Status</th>
-              <th className="text-right">Cartons</th><th className="text-right">Pieces sorted</th><th className="text-right">MRP</th>{isOwner && <th className="px-4 text-right">Landed cost</th>}<th className="px-4">Next action</th></tr>
+      <ListTabs list={list} />
+      <ListToolbar list={list} placeholder="Search container ref, supplier, warehouse…" />
+      <div className="card overflow-x-auto !p-0">
+        <table className="data-table">
+          <thead>
+            <tr><SortTh list={list} k="ref">Container</SortTh><th>Supplier</th><th>Warehouse</th><th>Status</th>
+              <th className="num">Cartons</th><SortTh list={list} k="pieces" className="num">Pieces sorted</SortTh><SortTh list={list} k="mrp" className="num">MRP</SortTh>
+              {isOwner && <SortTh list={list} k="cost" className="num">Landed cost</SortTh>}<th>Next action</th></tr>
           </thead>
           <tbody>
-            {rows.map((c) => (
-              <tr key={c.id} className="border-t border-slate-100 hover:bg-slate-50">
-                <td className="px-4 py-3 font-medium"><Link className="text-slate-900 underline" href={`/containers/${c.id}`}>{c.ref}</Link></td>
-                <td>{c.supplier}</td><td>{c.warehouse}</td><td><Badge value={c.status} /></td>
-                <td className="text-right tabular-nums">{c.cartons}</td>
-                <td className="text-right tabular-nums">{num(c.pieces)}{c.expectedPieces ? <span className="text-slate-400"> / {num(c.expectedPieces)}</span> : null}</td>
-                <td className="text-right tabular-nums">{inr(c.totalMrp)}</td>{isOwner && <td className="px-4 text-right tabular-nums">{inr(c.landedCost)}</td>}
-                <td className="px-4 text-xs">
-                  {c.status === "ARRIVED" && <Link className="font-medium text-violet-700 underline" href={`/containers/${c.id}`}>Do dock check →</Link>}
-                  {c.status === "SORTING" && <Link className="font-medium text-sky-700 underline" href={`/containers/${c.id}`}>Continue sorting →</Link>}
+            {list.rows.map((c) => (
+              <tr key={c.id}>
+                <td><Link className="font-mono text-sm font-medium text-slate-900 hover:text-emerald-700 hover:underline" href={`/containers/${c.id}`}>{c.ref}</Link>
+                  <div className="muted">{new Date(c.receivedAt).toLocaleDateString("en-IN", { dateStyle: "medium" })}</div></td>
+                <td>{c.supplier}</td><td className="text-slate-600">{c.warehouse}</td><td><Badge value={c.status} /></td>
+                <td className="num">{c.cartons}</td>
+                <td className="num">{num(c.pieces)}{c.expectedPieces ? <span className="text-slate-400"> / {num(c.expectedPieces)}</span> : null}</td>
+                <td className="num">{inr(c.totalMrp)}</td>{isOwner && <td className="num">{inr(c.landedCost)}</td>}
+                <td className="text-sm">
+                  {c.status === "ARRIVED" && <Link className="font-medium text-violet-700 hover:underline" href={`/containers/${c.id}`}>Do dock check →</Link>}
+                  {c.status === "SORTING" && <Link className="font-medium text-sky-700 hover:underline" href={`/containers/${c.id}`}>Continue sorting →</Link>}
                   {c.status === "SORTED" && (c.unshelvedCartons > 0
-                    ? <Link className="font-medium text-amber-700 underline" href="/putaway">{c.unshelvedCartons} cartons to shelve →</Link>
-                    : <span className="text-slate-500">Done</span>)}
+                    ? <Link className="font-medium text-amber-700 hover:underline" href="/putaway">{c.unshelvedCartons} cartons to shelve →</Link>
+                    : <span className="text-slate-400">Done</span>)}
                 </td>
               </tr>
             ))}
-            {rows.length === 0 && <tr><td colSpan={9} className="px-4 py-8 text-center text-slate-500">No containers yet.</td></tr>}
+            <EmptyRow list={list} cols={isOwner ? 9 : 8} empty="No containers yet." />
           </tbody>
         </table>
+        <Pagination list={list} />
       </div>
     </Shell>
   );

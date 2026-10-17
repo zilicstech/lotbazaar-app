@@ -115,8 +115,8 @@ function LotPageContent() {
 
           <div className="card"><ManifestView m={lot.manifest} /></div>
           <div className="card overflow-x-auto p-0">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
+            <table className="data-table">
+              <thead>
                 <tr><th className="px-4 py-3">LPN</th><th>Stock type</th><th>Container</th><th>Bin</th><th className="text-right">Pieces</th><th className="text-right">MRP</th><th className="px-4">Status</th></tr>
               </thead>
               <tbody>

@@ -56,7 +56,7 @@ function OrderContent() {
     <>
       <Header storeCode={code} />
       <main className="mx-auto max-w-3xl px-4 py-8">
-        <Link href={`/store/${code}/orders`} className="text-sm text-slate-500 underline">← My orders</Link>
+        <Link href={`/store/${code}/orders`} className="text-sm text-slate-500 text-emerald-700 hover:underline">← My orders</Link>
         <div className="mt-3"><ErrorBox message={error} /><Notice message={notice} /></div>
         {order && (
           <div className="space-y-4">
@@ -67,7 +67,7 @@ function OrderContent() {
               <div className="font-medium">{order.lotTitle}</div>
               <div className="text-slate-500"><span className="font-mono">{order.lotCode}</span> · {num(order.pieceCount)} pcs · {inr(order.amount)} + GST = <b>{inr2(order.total)}</b></div>
               {order.invoiceNo && (
-                <div className="mt-2">Tax invoice <b>{order.invoiceNo}</b> · <Link className="underline" href={`/store/${code}/invoice/${order.id}`} target="_blank">View / print</Link>
+                <div className="mt-2">Tax invoice <b>{order.invoiceNo}</b> · <Link className="text-emerald-700 hover:underline" href={`/store/${code}/invoice/${order.id}`} target="_blank">View / print</Link>
                   {order.transporter && <> · shipped by {order.transporter} ({order.vehicleNo})</>}</div>
               )}
             </div>

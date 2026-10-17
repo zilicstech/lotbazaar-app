@@ -39,13 +39,14 @@ export default function RegisterPage() {
   );
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-emerald-50 to-slate-100 p-4">
-      <div className="w-full max-w-lg rounded-xl bg-white p-6 shadow-lg">
-        <h1 className="text-xl font-semibold">Register your shop</h1>
+    <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
+      <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+        <div className="mb-6 flex items-center gap-2"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-xs font-bold text-white">LB</span><span className="text-[15px] font-semibold">LotBazaar</span></div>
+        <h1 className="text-xl font-semibold tracking-tight">Register your shop</h1>
         {done ? (
           <div className="mt-4 space-y-3 text-sm">
             <p className="rounded-md bg-emerald-50 p-3 text-emerald-800">Registered. The seller will verify your GSTIN and approve your account.</p>
-            <Link href="/login" className="text-emerald-700 underline">Go to sign in</Link>
+            <Link href="/login" className="font-medium text-emerald-700 hover:underline">Go to sign in</Link>
           </div>
         ) : (
           <form onSubmit={submit} className="mt-4 grid gap-3 sm:grid-cols-2">

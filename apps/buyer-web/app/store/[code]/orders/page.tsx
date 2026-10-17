@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import Header from "@/components/Header";
 import { Badge, ErrorBox } from "@/components/ui";
+import { EmptyRow, ListTabs, ListToolbar, Pagination, SortTh, useList } from "@/components/list";
 import { api, getSession, inr, num, when } from "@/lib/api";
 import type { Order } from "@/lib/types";
 
@@ -20,34 +21,51 @@ function OrdersPageContent() {
     if (getSession()) api<Order[]>(`/store/${code}/orders`).then(setRows).catch((e) => setError(e.message));
   }, [code]);
 
+  const list = useList(rows, {
+    search: (o) => [o.orderNo, o.lotCode, o.lotTitle, o.invoiceNo],
+    tabs: [
+      { key: "all", label: "All", match: () => true },
+      { key: "pay", label: "To pay", match: (o) => o.status === "PAYMENT_PENDING" },
+      { key: "way", label: "On the way", match: (o) => ["PAID", "PICKING", "PACKED", "DISPATCHED"].includes(o.status) },
+      { key: "delivered", label: "Delivered", match: (o) => o.status === "DELIVERED" || o.status === "CLOSED" },
+    ],
+    sorts: { placed: (o) => o.createdAt, total: (o) => o.total, pieces: (o) => o.pieceCount },
+    defaultSort: { key: "placed", dir: "desc" },
+  });
+
   return (
     <>
       <Header storeCode={code} />
-      <main className="mx-auto max-w-6xl px-4 py-8">
-        <h1 className="mb-4 text-2xl font-semibold">My orders</h1>
+      <main className="mx-auto max-w-7xl px-4 py-8 md:px-6">
+        <h1 className="mb-6 text-2xl font-semibold tracking-tight">My orders</h1>
         <ErrorBox message={error} />
-        <div className="card overflow-x-auto p-0">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
-              <tr><th className="px-4 py-3">Order</th><th>Lot</th><th className="text-right">Pieces</th><th className="text-right">Total (incl. GST)</th><th className="px-3">Status</th><th className="px-4" /></tr>
+        <ListTabs list={list} />
+        <ListToolbar list={list} placeholder="Search order no, lot, invoice…" />
+        <div className="card overflow-x-auto !p-0">
+          <table className="data-table">
+            <thead>
+              <tr><SortTh list={list} k="placed">Order</SortTh><th>Lot</th><SortTh list={list} k="pieces" className="num">Pieces</SortTh>
+                <SortTh list={list} k="total" className="num">Total (incl. GST)</SortTh><th>Status</th><th /></tr>
             </thead>
             <tbody>
-              {rows.map((o) => (
-                <tr key={o.id} className="border-t border-slate-100">
-                  <td className="px-4 py-2"><div className="font-mono text-xs">{o.orderNo}</div><div className="text-xs text-slate-500">{when(o.createdAt)}</div></td>
-                  <td><div>{o.lotTitle}</div><div className="font-mono text-xs text-slate-500">{o.lotCode}</div></td>
-                  <td className="text-right tabular-nums">{num(o.pieceCount)}</td><td className="text-right tabular-nums">{inr(o.total)}</td>
-                  <td className="px-3"><Badge value={o.status} /></td>
-                  <td className="px-4 text-right">
-                    <Link className="font-medium underline" href={o.status === "PAYMENT_PENDING" ? `/store/${code}/checkout/${o.id}` : `/store/${code}/orders/${o.id}`}>
+              {list.rows.map((o) => (
+                <tr key={o.id}>
+                  <td><div className="font-mono text-xs font-medium text-slate-900">{o.orderNo}</div><div className="muted">{when(o.createdAt)}</div></td>
+                  <td><div className="font-medium">{o.lotTitle}</div><div className="muted font-mono">{o.lotCode}</div></td>
+                  <td className="num">{num(o.pieceCount)}</td><td className="num font-semibold">{inr(o.total)}</td>
+                  <td><Badge value={o.status} /></td>
+                  <td className="text-right">
+                    <Link className={o.status === "PAYMENT_PENDING" ? "inline-flex rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700" : "whitespace-nowrap text-sm font-medium text-emerald-700 hover:underline"}
+                      href={o.status === "PAYMENT_PENDING" ? `/store/${code}/checkout/${o.id}` : `/store/${code}/orders/${o.id}`}>
                       {NEXT[o.status] ?? "Details"} →
                     </Link>
                   </td>
                 </tr>
               ))}
-              {rows.length === 0 && <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-500">No orders yet.</td></tr>}
+              <EmptyRow list={list} cols={6} empty="No orders yet. Buy a lot to see it here." />
             </tbody>
           </table>
+          <Pagination list={list} />
         </div>
       </main>
     </>

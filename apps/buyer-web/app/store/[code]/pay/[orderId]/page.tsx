@@ -60,7 +60,7 @@ function PayContent() {
             className="w-full rounded-md bg-indigo-700 py-3 font-medium text-white hover:bg-indigo-600 disabled:bg-slate-400">
             {busy ? "Processing…" : `Pay ${order ? inr2(order.total) : ""}`}
           </button>
-          <button disabled={busy || !order || message?.ok} onClick={() => pay(false)} className="w-full text-sm text-slate-500 underline disabled:no-underline">
+          <button disabled={busy || !order || message?.ok} onClick={() => pay(false)} className="w-full text-sm text-slate-500 underline disabled:no-text-emerald-700 hover:underline">
             Simulate a failed payment
           </button>
           <p className="text-center text-[11px] text-slate-400">Demo only: no money moves. In production this page is Razorpay / Cashfree.</p>

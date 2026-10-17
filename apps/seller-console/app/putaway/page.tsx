@@ -65,8 +65,8 @@ export default function PutawayPage() {
         <div className="space-y-4">
           <div className="card overflow-x-auto p-0">
             <div className="px-4 pt-3 font-semibold">Waiting for putaway ({waiting.length})</div>
-            <table className="mt-2 w-full text-sm">
-              <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
+            <table className="data-table mt-2">
+              <thead>
                 <tr><th className="px-4 py-2">LPN</th><th>Stock type</th><th>Container</th><th>Warehouse</th><th className="px-4" /></tr>
               </thead>
               <tbody>
@@ -74,7 +74,7 @@ export default function PutawayPage() {
                   <tr key={c.id} className="border-t border-slate-100">
                     <td className="px-4 py-2 font-mono text-xs">{c.lpn}</td><td className="font-mono text-xs">{c.skuCode}</td>
                     <td>{c.containerRef}</td><td className="text-xs">{c.warehouse}</td>
-                    <td className="px-4 text-right"><button className="text-xs underline" onClick={() => { setLpn(c.lpn); binInput.current?.focus(); }}>Use</button></td>
+                    <td className="px-4 text-right"><button className="text-xs text-emerald-700 hover:underline" onClick={() => { setLpn(c.lpn); binInput.current?.focus(); }}>Use</button></td>
                   </tr>
                 ))}
                 {waiting.length === 0 && <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-500">Nothing waiting. Every sorted carton is on a shelf.</td></tr>}

@@ -178,15 +178,15 @@ function ContainerPageContent() {
           {last && (
             <div className="flex flex-wrap items-center gap-3 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
               <span>Carton <span className="font-mono font-semibold">{last.lpn}</span> created → stock type <span className="font-mono">{last.skuCode}</span> ({last.pieceCount} pcs)</span>
-              <Link href={`/labels/${id}?lpn=${last.lpn}`} target="_blank" className="font-medium underline">Print its label</Link>
-              <Link href="/putaway" className="underline">Shelve it (putaway)</Link>
+              <Link href={`/labels/${id}?lpn=${last.lpn}`} target="_blank" className="font-medium text-emerald-700 hover:underline">Print its label</Link>
+              <Link href="/putaway" className="text-emerald-700 hover:underline">Shelve it (putaway)</Link>
             </div>
           )}
         </form>
       )}
       <div className="card overflow-x-auto p-0">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 text-left text-xs uppercase text-slate-500">
+        <table className="data-table">
+          <thead>
             <tr><th className="px-4 py-3">LPN</th><th>SKU (sort bucket)</th><th>Brand</th><th>Category</th><th>Grade</th>
               <th className="text-right">Pieces</th><th className="text-right">Weight</th><th className="text-right">MRP</th><th className="px-4">Bin</th><th className="px-4">Status</th></tr>
           </thead>

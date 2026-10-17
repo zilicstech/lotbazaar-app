@@ -33,7 +33,7 @@ function CheckoutContent() {
               <div className="text-sm text-slate-500"><span className="font-mono">{order.lotCode}</span> · {num(order.pieceCount)} pieces · order <span className="font-mono">{order.orderNo}</span>
                 {order.source === "OFFER" && " · your accepted offer"}</div>
             </div>
-            <table className="w-full text-sm">
+            <table className="data-table">
               <tbody>
                 <tr><td className="py-1">Lot price</td><td className="text-right tabular-nums">{inr2(order.amount)}</td></tr>
                 {order.igst > 0
@@ -56,7 +56,7 @@ function CheckoutContent() {
                 </Link>
               </>
             ) : (
-              <div className="text-sm">This order is already {order.status.toLowerCase().replace("_", " ")}. <Link className="underline" href={`/store/${code}/orders/${order.id}`}>Track it</Link></div>
+              <div className="text-sm">This order is already {order.status.toLowerCase().replace("_", " ")}. <Link className="text-emerald-700 hover:underline" href={`/store/${code}/orders/${order.id}`}>Track it</Link></div>
             )}
           </div>
         )}

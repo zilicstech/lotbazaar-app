@@ -50,8 +50,8 @@ function LotPageContent() {
   return (
     <>
       <Header storeCode={code} />
-      <main className="mx-auto max-w-6xl px-4 py-8">
-        <Link href={`/store/${code}`} className="text-sm text-slate-500 underline">← All lots</Link>
+      <main className="mx-auto max-w-7xl px-4 py-8 md:px-6">
+        <Link href={`/store/${code}`} className="text-sm text-slate-500 text-emerald-700 hover:underline">← All lots</Link>
         <div className="mt-3"><ErrorBox message={error} /><Notice message={notice} /></div>
         {lot && (
           <div className="mt-2 grid gap-6 lg:grid-cols-3">

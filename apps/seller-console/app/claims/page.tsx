@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import Shell from "@/components/Shell";
 import { Badge, Button, ErrorBox, Notice } from "@/components/ui";
+import { ListTabs, ListToolbar, Pagination, useList } from "@/components/list";
 import { api, inr } from "@/lib/api";
 import type { Claim } from "@/lib/types";
 
@@ -30,20 +31,41 @@ export default function ClaimsPage() {
     }
   }
 
+  const list = useList(rows, {
+    search: (c) => [c.orderNo, c.lotCode, c.lotTitle, c.buyerBusiness, c.buyerCity, c.note],
+    filters: {
+      type: { label: "Problem", value: (c) => TYPE[c.type] ?? c.type },
+      city: { label: "Buyer city", value: (c) => c.buyerCity },
+    },
+    tabs: [
+      { key: "open", label: "To settle", match: (c) => c.status === "OPEN" },
+      { key: "resolved", label: "Credited", match: (c) => c.status === "RESOLVED" },
+      { key: "rejected", label: "Rejected", match: (c) => c.status === "REJECTED" },
+      { key: "all", label: "All", match: () => true },
+    ],
+    sorts: { raised: (c) => c.createdAt },
+    defaultSort: { key: "raised", dir: "desc" },
+    pageSize: 20,
+  });
+
   return (
-    <Shell title="Claims" help={<>Step 16. Buyers can report a problem within 72 hours of delivery (with an unboxing video on WhatsApp). Give a credit amount, or reject with a reason. Either way the order closes.</>}>
+    <Shell title="Claims" help={<>Buyers can report a problem within 72 hours of delivery (with an unboxing video on WhatsApp). Give a credit amount, or reject with a reason. Either way the order closes.</>}>
       <ErrorBox message={error} />
       <Notice message={notice} />
+      <ListTabs list={list} />
+      <ListToolbar list={list} placeholder="Search order, lot, buyer, note…" />
       <div className="space-y-3">
-        {rows.map((c) => {
+        {list.rows.map((c) => {
           const f = form[c.id] ?? { credit: "", note: "" };
           return (
             <div key={c.id} className="card space-y-2">
               <div className="flex flex-wrap items-center gap-2">
-                <Badge value={c.status} /><b>{TYPE[c.type]}</b>{c.pieces > 0 && <span>· {c.pieces} pcs</span>}
-                <span className="text-sm text-slate-500">— {c.buyerBusiness}, {c.buyerCity} · order <span className="font-mono">{c.orderNo}</span> ({inr(c.orderTotal)}) · {c.lotTitle}</span>
+                <Badge value={c.status} /><span className="font-semibold text-slate-900">{TYPE[c.type]}</span>{c.pieces > 0 && <span className="text-sm text-slate-600">· {c.pieces} pcs</span>}
+                <span className="muted ml-auto">{new Date(c.createdAt).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</span>
               </div>
-              <p className="text-sm italic">&ldquo;{c.note}&rdquo;</p>
+              <div className="text-sm text-slate-600">{c.buyerBusiness}, {c.buyerCity} · order <span className="font-mono">{c.orderNo}</span> ({inr(c.orderTotal)}) · {c.lotTitle}
+              </div>
+              <p className="rounded-lg bg-slate-50 px-3 py-2 text-sm italic text-slate-700">&ldquo;{c.note}&rdquo;</p>
               {c.status === "OPEN" ? (
                 <div className="flex flex-wrap items-end gap-2">
                   <div><label className="label" htmlFor={`cr-${c.id}`}>Credit (₹)</label>
@@ -59,8 +81,14 @@ export default function ClaimsPage() {
             </div>
           );
         })}
-        {rows.length === 0 && <div className="card text-center text-sm text-slate-500">No claims. <Link className="underline" href="/orders">See orders</Link></div>}
+        {list.total === 0 && (
+          <div className="card py-10 text-center text-sm text-slate-500">
+            {list.unfiltered === 0 ? <>No claims. <Link className="font-medium text-emerald-700 hover:underline" href="/orders">See orders</Link></>
+              : <>Nothing here. <button type="button" className="font-medium text-emerald-700 hover:underline" onClick={() => { list.clear(); list.setTab("all"); }}>Show all claims</button></>}
+          </div>
+        )}
       </div>
+      {list.total > 0 && <div className="card mt-3 !p-0"><Pagination list={list} /></div>}
     </Shell>
   );
 }

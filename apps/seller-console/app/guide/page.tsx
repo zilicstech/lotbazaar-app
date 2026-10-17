@@ -44,8 +44,8 @@ export default function GuidePage() {
                 <div className="text-sm text-slate-600">{s.why}</div>
               </div>
               {external
-                ? <a href={s.href} target="_blank" rel="noreferrer" className="shrink-0 text-sm underline">Buyer site ↗</a>
-                : <Link href={s.href} className="shrink-0 text-sm underline">{s.where}</Link>}
+                ? <a href={s.href} target="_blank" rel="noreferrer" className="shrink-0 text-sm text-emerald-700 hover:underline">Buyer site ↗</a>
+                : <Link href={s.href} className="shrink-0 text-sm text-emerald-700 hover:underline">{s.where}</Link>}
             </li>
           );
         })}
