@@ -10,6 +10,7 @@ export type Carton = {
   id: string; lpn: string; containerRef: string; skuCode: string; brand: string; category: string; gender: string;
   grade: string; mrpBand: string; pieceCount: number; weightG: number; totalMrp: number; sizeTally: string;
   status: string; lotId: string | null; warehouse: string; bin: string | null; createdAt: string;
+  priceLines: { size: string; mrp: number; pieces: number }[] | null;
 };
 export type Manifest = {
   cartons: number; pieces: number; totalMrp: number; avgMrp: number; weightKg: number; grades: string[];

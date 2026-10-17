@@ -12,6 +12,10 @@ const APPAREL = ["S", "M", "L", "XL", "XXL"];
 const WAIST = ["28", "30", "32", "34", "36", "38"];
 const SHOES = ["6", "7", "8", "9", "10", "11"];
 
+type Line = { key: number; size: string; mrp: string; pieces: string };
+let lineKey = 0;
+const newLine = (): Line => ({ key: ++lineKey, size: "", mrp: "", pieces: "" });
+
 const sizesFor = (category: string) =>
   category === "JEANS" ? WAIST : category === "SNEAKER" ? SHOES : APPAREL;
 
@@ -20,8 +24,8 @@ function ContainerPageContent() {
   const [container, setContainer] = useState<Container | null>(null);
   const [cartons, setCartons] = useState<Carton[]>([]);
   const [masters, setMasters] = useState<Masters | null>(null);
-  const [form, setForm] = useState({ brandId: "", categoryId: "", gender: "M", grade: "A", weightKg: "", totalMrp: "" });
-  const [tally, setTally] = useState<Record<string, string>>({});
+  const [form, setForm] = useState({ brandId: "", categoryId: "", gender: "M", grade: "A", weightKg: "" });
+  const [lines, setLines] = useState<Line[]>([newLine()]);
   const [error, setError] = useState<string | null>(null);
   const [last, setLast] = useState<Carton | null>(null);
   const [dock, setDock] = useState({ bales: "", kg: "" });
@@ -42,23 +46,28 @@ function ContainerPageContent() {
 
   const categoryCode = masters?.categories.find((c) => c.id === form.categoryId)?.code ?? "";
   const sizes = sizesFor(categoryCode);
-  const pieces = sizes.reduce((sum, s) => sum + (Number(tally[s]) || 0), 0);
+  const filled = lines.filter((l) => Number(l.mrp) > 0 && Number(l.pieces) > 0);
+  const pieces = filled.reduce((sum, l) => sum + Number(l.pieces), 0);
+  const totalMrp = filled.reduce((sum, l) => sum + Number(l.mrp) * Number(l.pieces), 0);
+  const incomplete = lines.some((l) => (l.mrp !== "" || l.pieces !== "") && !(Number(l.mrp) > 0 && Number(l.pieces) > 0));
+  const setLine = (i: number, patch: Partial<Line>) => setLines((ls) => ls.map((l, j) => (j === i ? { ...l, ...patch } : l)));
 
   async function addCarton(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     try {
-      const sizeTally = Object.fromEntries(sizes.map((s) => [s, Number(tally[s]) || 0]).filter(([, n]) => (n as number) > 0));
+      // Pieces, size tally and total MRP are worked out by the server from the price lines.
       const carton = await api<Carton>(`/seller/containers/${id}/cartons`, {
         method: "POST",
         body: {
           brandId: form.brandId, categoryId: form.categoryId, gender: form.gender, grade: form.grade,
-          pieceCount: pieces, weightG: Math.round(Number(form.weightKg) * 1000), totalMrp: Number(form.totalMrp), sizeTally,
+          weightG: Math.round(Number(form.weightKg) * 1000),
+          priceLines: filled.map((l) => ({ size: l.size || sizes[0], mrp: Number(l.mrp), pieces: Number(l.pieces) })),
         },
       });
       setLast(carton);
-      setTally({});
-      setForm((f) => ({ ...f, weightKg: "", totalMrp: "" }));
+      setLines([newLine()]);
+      setForm((f) => ({ ...f, weightKg: "" }));
       load();
     } catch (err) {
       setError((err as Error).message);
@@ -83,7 +92,7 @@ function ContainerPageContent() {
   return (
     <Shell title={container ? `Container ${container.ref}` : "Container"}
       help={status === "ARRIVED" ? <>Step 2. The container is at the gate. Count the bales/cartons and weigh it, then compare with the supplier&apos;s packing list.</>
-        : status === "SORTING" ? <>Step 3. Open bales, sort similar items into one carton, count pieces per size, weigh it, and stick the printed barcode label on it. When everything is sorted, click <b>Finish sorting</b> (step 4).</>
+        : status === "SORTING" ? <>Step 3. Open bales, sort similar items into one carton, enter each size with its tag MRP and pieces, weigh it, and stick the printed barcode label on it. When everything is sorted, click <b>Finish sorting</b> (step 4).</>
         : <>This container is fully sorted. Cartons without a bin still need putaway (step 5).</>}
       actions={<>
         {cartons.length > 0 && <Link href={`/labels/${id}`} target="_blank"><Button variant="secondary">Print all labels</Button></Link>}
@@ -140,14 +149,14 @@ function ContainerPageContent() {
         <form onSubmit={addCarton} className="card mb-6 space-y-4">
           <div>
             <h2 className="font-semibold">Sorting station — add carton</h2>
-            <p className="text-xs text-slate-500">One carton = one bucket (brand · gender · category · grade). Count pieces per size; the SKU and LPN label are generated.</p>
+            <p className="text-xs text-slate-500">One carton = one bucket (brand · gender · category · grade). Enter each size with its tag MRP and number of pieces; add another row for the same size at a different price. Totals, the SKU and the LPN label are generated.</p>
           </div>
           <div className="grid gap-3 md:grid-cols-4">
             <div><label className="label" htmlFor="brand">Brand</label>
               <select id="brand" className="input" value={form.brandId} onChange={(e) => setForm({ ...form, brandId: e.target.value })}>
                 {masters.brands.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}</select></div>
             <div><label className="label" htmlFor="cat">Category</label>
-              <select id="cat" className="input" value={form.categoryId} onChange={(e) => { setForm({ ...form, categoryId: e.target.value }); setTally({}); }}>
+              <select id="cat" className="input" value={form.categoryId} onChange={(e) => { setForm({ ...form, categoryId: e.target.value }); setLines([newLine()]); }}>
                 {masters.categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
             <div><label className="label" htmlFor="gender">Gender</label>
               <select id="gender" className="input" value={form.gender} onChange={(e) => setForm({ ...form, gender: e.target.value })}>
@@ -157,23 +166,46 @@ function ContainerPageContent() {
                 <option value="A">A – new with tags</option><option value="B">B – no tags / minor defect</option><option value="C">C – defect</option></select></div>
           </div>
           <div>
-            <div className="label">Size tally (pieces)</div>
-            <div className="flex flex-wrap gap-2">
-              {sizes.map((s) => (
-                <div key={s} className="w-20">
-                  <label className="text-xs text-slate-500" htmlFor={`size-${s}`}>{s}</label>
-                  <input id={`size-${s}`} type="number" min="0" className="input" value={tally[s] ?? ""} onChange={(e) => setTally({ ...tally, [s]: e.target.value })} />
+            <div className="label">Sizes and tag prices</div>
+            <div className="overflow-x-auto rounded-lg border border-slate-200">
+              <table className="data-table">
+                <thead><tr><th>Size</th><th className="num">MRP per piece (₹)</th><th className="num">Pieces</th><th className="num">Line total</th><th className="w-10" /></tr></thead>
+                <tbody>
+                  {lines.map((l, i) => {
+                    const ok = Number(l.mrp) > 0 && Number(l.pieces) > 0;
+                    return (
+                      <tr key={l.key}>
+                        <td className="!py-2">
+                          <select aria-label={`Size, row ${i + 1}`} className="input w-28" value={l.size || sizes[0]} onChange={(e) => setLine(i, { size: e.target.value })}>
+                            {sizes.map((s) => <option key={s} value={s}>{s}</option>)}
+                          </select>
+                        </td>
+                        <td className="num !py-2"><input aria-label={`MRP per piece, row ${i + 1}`} type="number" min="1" step="0.01" inputMode="decimal" className="input ml-auto w-36 text-right" placeholder="e.g. 1999" value={l.mrp} onChange={(e) => setLine(i, { mrp: e.target.value })} /></td>
+                        <td className="num !py-2"><input aria-label={`Pieces, row ${i + 1}`} type="number" min="1" step="1" inputMode="numeric" className="input ml-auto w-28 text-right" placeholder="0" value={l.pieces} onChange={(e) => setLine(i, { pieces: e.target.value })} /></td>
+                        <td className="num !py-2 align-middle font-medium">{ok ? inr(Number(l.mrp) * Number(l.pieces)) : <span className="text-slate-300">—</span>}</td>
+                        <td className="!py-2 text-right align-middle">
+                          {lines.length > 1 && <button type="button" aria-label={`Remove row ${i + 1}`} onClick={() => setLines((ls) => ls.filter((_, j) => j !== i))} className="rounded p-1 text-slate-400 hover:bg-rose-50 hover:text-rose-600">✕</button>}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-slate-50/60 px-4 py-2.5 text-sm">
+                <button type="button" className="font-medium text-emerald-700 hover:underline"
+                  onClick={() => setLines((ls) => [...ls, { ...newLine(), size: ls[ls.length - 1]?.size || sizes[0] }])}>+ Add row</button>
+                <div className="text-slate-700">
+                  <b className="tabular-nums">{num(pieces)}</b> pieces · <b className="tabular-nums">{inr(totalMrp)}</b> total MRP
+                  {pieces > 0 && <span className="text-slate-500"> · avg {inr(totalMrp / pieces)} / pc</span>}
                 </div>
-              ))}
-              <div className="flex items-end pb-2 text-sm">Total: <span className="ml-1 font-semibold">{pieces}</span></div>
+              </div>
             </div>
+            {incomplete && <p className="mt-1 text-xs text-amber-700">Rows need both an MRP and a number of pieces; empty rows are skipped.</p>}
           </div>
           <div className="grid gap-3 md:grid-cols-4">
             <div><label className="label" htmlFor="weight">Carton weight (kg)</label>
               <input id="weight" required type="number" step="0.1" min="0.1" className="input" value={form.weightKg} onChange={(e) => setForm({ ...form, weightKg: e.target.value })} /></div>
-            <div><label className="label" htmlFor="mrp">Total tag MRP (₹)</label>
-              <input id="mrp" required type="number" min="1" className="input" value={form.totalMrp} onChange={(e) => setForm({ ...form, totalMrp: e.target.value })} /></div>
-            <div className="flex items-end"><Button type="submit" disabled={pieces === 0}>Add carton</Button></div>
+            <div className="flex items-end"><Button type="submit" disabled={pieces === 0 || incomplete}>Add carton</Button></div>
           </div>
           {last && (
             <div className="flex flex-wrap items-center gap-3 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
@@ -196,7 +228,8 @@ function ContainerPageContent() {
                 <td className="px-4 py-2 font-mono text-xs">{c.lpn}</td><td className="font-mono text-xs">{c.skuCode}</td>
                 <td>{c.brand}</td><td>{c.category}</td><td>{c.grade}</td>
                 <td className="text-right tabular-nums">{c.pieceCount}</td><td className="text-right tabular-nums">{(c.weightG / 1000).toFixed(1)} kg</td>
-                <td className="text-right tabular-nums">{inr(c.totalMrp)}</td>
+                <td className="text-right tabular-nums">{inr(c.totalMrp)}
+                  {c.priceLines && <div className="muted mt-0.5 whitespace-nowrap">{c.priceLines.map((l) => `${l.size} ${inr(l.mrp)}×${l.pieces}`).join(" · ")}</div>}</td>
                 <td className="px-4 font-mono text-xs">{c.bin ?? <span className="font-sans text-amber-700">not shelved</span>}</td><td className="px-4"><Badge value={c.status} /></td>
               </tr>
             ))}
