@@ -81,6 +81,20 @@ apps/buyer-web/
 
 Navigation in the seller console is filtered by role: warehouse staff never see costs, buyers or prices beyond the invoice.
 
+## Deployment
+
+Each app has its own `Dockerfile` that builds a small production image from Next.js's standalone output and runs it as a non-root user. Build from the **repository root**, because the npm workspace and its lockfile live there.
+
+```bash
+docker build -f apps/seller-console/Dockerfile --build-arg API_URL=https://api.example.com -t lotbazaar-seller-console .
+docker build -f apps/buyer-web/Dockerfile      --build-arg API_URL=https://api.example.com -t lotbazaar-buyer-web .
+
+docker run -p 3001:3001 lotbazaar-seller-console
+docker run -p 3000:3000 lotbazaar-buyer-web
+```
+
+`API_URL` is the backend address. It is baked into the image at build time (Next.js evaluates the `/api` proxy rule during the build), so build one image per environment.
+
 ## Notes
 
 - Sessions are kept in `localStorage`; a 401 from the API signs the user out.

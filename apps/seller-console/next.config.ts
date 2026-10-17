@@ -1,6 +1,10 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Self-contained server for the Docker image. The workspace root is the tracing root so hoisted node_modules are included.
+  output: "standalone",
+  outputFileTracingRoot: path.join(__dirname, "../.."),
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {
