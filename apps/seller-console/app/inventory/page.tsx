@@ -16,6 +16,7 @@ const band = (b: string) => {
 const ageDays = (c: Carton) => Math.floor((Date.now() - new Date(c.createdAt).getTime()) / 86_400_000);
 const ageBucket = (d: number) => (d <= 30 ? "0–30 days" : d <= 60 ? "31–60 days" : d <= 90 ? "61–90 days" : "90+ days");
 const STATUS: Record<string, string> = { AVAILABLE: "On shelf", RESERVED: "In a lot", SORTED: "Not shelved", SOLD: "Sold" };
+const ctn = (n: number) => `${n} ${n === 1 ? "carton" : "cartons"}`;
 const sum = (cs: Carton[], f: (c: Carton) => number) => cs.reduce((s, c) => s + f(c), 0);
 
 type StockRow = {
@@ -102,11 +103,11 @@ export default function InventoryPage() {
       <ErrorBox message={error} />
 
       <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-5">
-        <Stat label="On hand" value={`${num(sum(onHand, (c) => c.pieceCount))} pcs`} hint={`${onHand.length} cartons · ${inr(sum(onHand, (c) => c.totalMrp))} MRP`} />
-        <Stat label="On shelf, free to sell" tone="good" value={`${num(sum(by("AVAILABLE"), (c) => c.pieceCount))} pcs`} hint={`${by("AVAILABLE").length} cartons`} />
-        <Stat label="In lots" value={`${num(sum(by("RESERVED"), (c) => c.pieceCount))} pcs`} hint={`${by("RESERVED").length} cartons, listed or being sold`} />
-        <Stat label="Not shelved yet" tone={by("SORTED").length ? "warn" : undefined} value={`${by("SORTED").length} cartons`} hint="Sorted, waiting for putaway" />
-        <Stat label="Older than 90 days" tone={old.length ? "warn" : undefined} value={`${num(sum(old, (c) => c.pieceCount))} pcs`} hint={`${old.length} cartons · consider a markdown`} />
+        <Stat label="On hand" value={`${num(sum(onHand, (c) => c.pieceCount))} pcs`} hint={`${ctn(onHand.length)} · ${inr(sum(onHand, (c) => c.totalMrp))} MRP`} />
+        <Stat label="On shelf, free to sell" tone="good" value={`${num(sum(by("AVAILABLE"), (c) => c.pieceCount))} pcs`} hint={ctn(by("AVAILABLE").length)} />
+        <Stat label="In lots" value={`${num(sum(by("RESERVED"), (c) => c.pieceCount))} pcs`} hint={`${ctn(by("RESERVED").length)}, listed or being sold`} />
+        <Stat label="Not shelved yet" tone={by("SORTED").length ? "warn" : undefined} value={ctn(by("SORTED").length)} hint="Sorted, waiting for putaway" />
+        <Stat label="Older than 90 days" tone={old.length ? "warn" : undefined} value={`${num(sum(old, (c) => c.pieceCount))} pcs`} hint={`${ctn(old.length)} · consider a markdown`} />
       </div>
 
       <ListTabs list={list} />

@@ -48,7 +48,7 @@ export default function OffersPage() {
 
   const pct = (o: Offer, v: number) => `${((100 * v) / o.lotTotalMrp).toFixed(1)}% of MRP`;
   return (
-    <Shell title="Offers" help={<>Step 9b. Buyers can offer less than the Buy Now price on lots that accept offers. <b>Accept</b> holds the lot for that buyer for 24 hours to pay. <b>Counter</b> proposes a price in between; the buyer can take it. Other offers on a sold lot expire.</>}>
+    <Shell title="Offers" help={<>Buyers can offer less than the Buy Now price on lots that accept offers. <b>Accept</b> holds the lot for that buyer for 24 hours to pay. <b>Counter</b> proposes a price in between; the buyer can take it. Other offers on a sold lot expire.</>}>
       <ErrorBox message={error} />
       <Notice message={notice} />
       <ListTabs list={list} />

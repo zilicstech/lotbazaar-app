@@ -15,6 +15,8 @@ const SHOES = ["6", "7", "8", "9", "10", "11"];
 type Line = { key: number; size: string; mrp: string; pieces: string };
 let lineKey = 0;
 const newLine = (): Line => ({ key: ++lineKey, size: "", mrp: "", pieces: "" });
+// Text inputs instead of type="number": no spinner arrows or scroll-wheel changes; only digits and one dot are kept.
+const decimal = (v: string) => v.replace(/[^\d.]/g, "").replace(/(\..*)\./g, "$1");
 
 const sizesFor = (category: string) =>
   category === "JEANS" ? WAIST : category === "SNEAKER" ? SHOES : APPAREL;
@@ -186,13 +188,13 @@ function ContainerPageContent() {
                         </select>
                         <div className="relative">
                           <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">₹</span>
-                          <input aria-label={`MRP per piece, row ${i + 1}`} type="number" min="1" step="0.01" inputMode="decimal" className="input no-spin pl-7 tabular-nums"
-                            placeholder="1,999" value={l.mrp} onChange={(e) => setLine(i, { mrp: e.target.value })} />
+                          <input aria-label={`MRP per piece, row ${i + 1}`} type="text" inputMode="decimal" autoComplete="off" className="input pl-7 tabular-nums"
+                            placeholder="1999" value={l.mrp} onChange={(e) => setLine(i, { mrp: decimal(e.target.value) })} />
                         </div>
                         <span aria-hidden className="hidden text-center text-slate-400 sm:block">×</span>
                         <div className="relative">
-                          <input aria-label={`Pieces, row ${i + 1}`} type="number" min="1" step="1" inputMode="numeric" className="input no-spin pr-10 tabular-nums"
-                            placeholder="0" value={l.pieces} onChange={(e) => setLine(i, { pieces: e.target.value })} />
+                          <input aria-label={`Pieces, row ${i + 1}`} type="text" inputMode="numeric" autoComplete="off" className="input pr-10 tabular-nums"
+                            placeholder="0" value={l.pieces} onChange={(e) => setLine(i, { pieces: e.target.value.replace(/\D/g, "").slice(0, 4) })} />
                           <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">pcs</span>
                         </div>
                         <span aria-hidden className="hidden text-center text-slate-400 sm:block">=</span>
@@ -225,8 +227,8 @@ function ContainerPageContent() {
               <div className="w-44">
                 <label className="label" htmlFor="weight">Carton weight</label>
                 <div className="relative">
-                  <input id="weight" required type="number" step="0.1" min="0.1" inputMode="decimal" className="input no-spin pr-9 tabular-nums" placeholder="0.0"
-                    value={form.weightKg} onChange={(e) => setForm({ ...form, weightKg: e.target.value })} />
+                  <input id="weight" required type="text" inputMode="decimal" autoComplete="off" className="input pr-9 tabular-nums" placeholder="0.0"
+                    value={form.weightKg} onChange={(e) => setForm({ ...form, weightKg: decimal(e.target.value) })} />
                   <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">kg</span>
                 </div>
               </div>
